@@ -1,8 +1,3 @@
----
-output: 
-  html_document: 
-    keep_md: yes
----
 #"Practical Machine Learning Course Project"#
 ###"Aditya"###
 ###Date: "28 December 2015"###
