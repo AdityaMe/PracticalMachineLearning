@@ -112,16 +112,124 @@ $(document).ready(function () {
 
 
 <div id="practical-machine-learning-course-project" class="section level1">
-<h1>“Practical Machine Learning Course Project”</h1>
-<div id="aditya" class="section level3">
-<h3>“Aditya”</h3>
+<h1>Practical Machine Learning Course Project</h1>
+<div id="by-aditya" class="section level3">
+<h3>By: Aditya</h3>
+<div id="date-10-april-2016" class="section level4">
+<h4>Date: 10 April 2016</h4>
+<p>This Project has the aim of understanding and predicting the manner in which <strong><em>six</em></strong> participants did their exercise using <strong><em>dumbells</em></strong>. The data was collected using devices such as <strong><em>Jawbone Up, Nike FuelBand, and Fitbit</em></strong>. The <strong>Human Activity Recognition</strong> has become an important area of research in recent times and and focusses on how well a given activity was performed by the user.</p>
+<p>The first step is to download the data in <code>CSV</code> format and read it into R:</p>
+<pre class="r"><code>## Downloading and reading the Activity Data:
+## Training URL:
+url1 &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
+## Testing URL:
+url2 &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;
+## Reading the Training Data:
+train &lt;- read.csv(url(url1))
+## Reading the Testing Data:
+test &lt;- read.csv(url(url2))</code></pre>
+<p>Now that the data has been read into R, the next step is cleaning the data. Upon looking at the data structure, it can be understood that there are many columns with mostly <code>NA</code>. The first step is to remove these columns.</p>
+<pre class="r"><code>## Finding and removing columns with mostly NA values:
+naCol &lt;- sapply(train, function(x) any(is.na(x)|x == &quot; &quot;))
+train &lt;- train[, naCol == FALSE]
+test &lt;- test[, naCol == FALSE]</code></pre>
+<p>Now, removing any column with near zero variances, and columns which are not relevant to this analysis:</p>
+<pre class="r"><code>## Finding and removing columns with NZV values:
+zeroVar &lt;- nearZeroVar(train, saveMetrics = TRUE)
+train &lt;- train[, zeroVar$nzv == FALSE]
+zeroVar1 &lt;- nearZeroVar(test, saveMetrics = TRUE)
+test &lt;- test[, zeroVar1$nzv == FALSE]
+## Removing the first six columns from the resultanat dataset since they are not relevant for preiction:
+train &lt;- train[, 7:length(colnames(train))]
+test &lt;- test[, 7:length(colnames(test))]</code></pre>
+<p>Now that the data is ready for processing, the training dataset will be divided into Training and Test sets (70:30). Then, the <strong>Random Forest Model (RF)</strong> will be used to analyze and predict the activities:</p>
+<pre class="r"><code>## Dividing the training dataset:
+set.seed(1323)
+inTrain &lt;- createDataPartition(y = train$classe, p = 0.70, list = FALSE)
+Training &lt;- train[inTrain, ]
+Testing &lt;- train[-inTrain, ]
+## Building the RF model:
+set.seed(13232)
+rfModel &lt;- randomForest(classe~., data = Training)
+## Predicting the Tesing data with RF model,
+predicted &lt;- predict(rfModel, Testing, type = &quot;class&quot;)
+## Checking the accuracy of predictions using Confusion Matrix
+confusionMatrix(predicted, Testing$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1669    4    0    0    0
+##          B    4 1135    6    0    0
+##          C    0    0 1020    8    1
+##          D    0    0    0  956    2
+##          E    1    0    0    0 1079
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9956          
+##                  95% CI : (0.9935, 0.9971)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9944          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9970   0.9965   0.9942   0.9917   0.9972
+## Specificity            0.9991   0.9979   0.9981   0.9996   0.9998
+## Pos Pred Value         0.9976   0.9913   0.9913   0.9979   0.9991
+## Neg Pred Value         0.9988   0.9992   0.9988   0.9984   0.9994
+## Prevalence             0.2845   0.1935   0.1743   0.1638   0.1839
+## Detection Rate         0.2836   0.1929   0.1733   0.1624   0.1833
+## Detection Prevalence   0.2843   0.1946   0.1749   0.1628   0.1835
+## Balanced Accuracy      0.9980   0.9972   0.9961   0.9956   0.9985</code></pre>
+<pre class="r"><code>## Below is a plot of the Random Forest Model
+plot(rfModel)</code></pre>
+<p><img src="data:image/png;base64,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" alt /></p>
+<p>The above model predicted the Training data with a very high accuracy of <strong><em>99.56%</em></strong>. However, to test if accuracy can be further improved, the <strong>Decision Tree model</strong> can be used:</p>
+<pre class="r"><code>## Building the tree model
+set.seed(13232)
+treeModel &lt;- rpart(classe~., data = Training, method = &quot;class&quot;)
+## Predicting with the model
+predicted1 &lt;- predict(treeModel, Testing, type = &quot;class&quot;)
+## Checking the accuracy of predictions using Confusion Matrix
+confusionMatrix(predicted1, Testing$classe)</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1533  198   75   99   22
+##          B   55  688   58   82   71
+##          C   32  143  812  101  146
+##          D   40   81   80  566   77
+##          E   14   29    1  116  766
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.7417          
+##                  95% CI : (0.7303, 0.7529)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.6716          
+##  Mcnemar's Test P-Value : &lt; 2.2e-16       
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9158   0.6040   0.7914  0.58714   0.7079
+## Specificity            0.9064   0.9440   0.9132  0.94351   0.9667
+## Pos Pred Value         0.7955   0.7212   0.6580  0.67062   0.8272
+## Neg Pred Value         0.9644   0.9085   0.9540  0.92105   0.9363
+## Prevalence             0.2845   0.1935   0.1743  0.16381   0.1839
+## Detection Rate         0.2605   0.1169   0.1380  0.09618   0.1302
+## Detection Prevalence   0.3274   0.1621   0.2097  0.14342   0.1573
+## Balanced Accuracy      0.9111   0.7740   0.8523  0.76532   0.8373</code></pre>
+<p>The accuracy level of the Decision Tree model above is only <strong><em>74.17%</em></strong> which is much lower than the Random Forest Model. It is obvious that the Random Forest Model gives superior predictions compared to the Decision Tree model.</p>
 </div>
-<div id="date-4-10-april-2016" class="section level3">
-<h3>Date: “4-10 April 2016”</h3>
-</div>
-<div id="output-html_document" class="section level3">
-<h3>output: html_document</h3>
-<p>This Project has the aim of understanding and predicting the manner in which <strong><em>six</em></strong> participants did their exercise using <strong><em>dumbells</em></strong>. The data was collected using devices such as <strong><em>Jawbone Up, Nike FuelBand, and Fitbit</em></strong>. The objective</p>
 </div>
 </div>
 

@@ -3,10 +3,85 @@ output:
   html_document: 
     keep_md: yes
 ---
-#"Practical Machine Learning Course Project"#
-###"Aditya"###
-###Date: "4-10 April 2016"###
-###output: html_document###
+#Practical Machine Learning Course Project#
+###By: Aditya###
+####Date: 10 April 2016####
 
 
-This Project has the aim of understanding and predicting the manner in which ***six*** participants did their exercise using ***dumbells***. The data was collected using devices such as ***Jawbone Up, Nike FuelBand, and Fitbit***. The objective 
+
+This Project has the aim of understanding and predicting the manner in which ***six*** participants did their exercise using ***dumbells***. The data was collected using devices such as ***Jawbone Up, Nike FuelBand, and Fitbit***. The **Human Activity Recognition** has become an important area of research in recent times and and focusses on how well a given activity was performed by the user.
+
+```{r, echo=FALSE, cache=TRUE, warning=FALSE, message=FALSE}
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+library(randomForest)
+library(knitr)
+library(ISLR)
+```
+
+The first step is to download the  data in `CSV` format and read it into R:
+```{r, echo=TRUE, cache=TRUE, warning=FALSE}
+## Downloading and reading the Activity Data:
+## Training URL:
+url1 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+## Testing URL:
+url2 <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+## Reading the Training Data:
+train <- read.csv(url(url1))
+## Reading the Testing Data:
+test <- read.csv(url(url2))
+```
+
+Now that the data has been read into R, the next step is cleaning the data. Upon looking at the data structure, it can be understood that there are many columns with mostly `NA`. The first step is to remove these columns. 
+```{r, echo=TRUE, cache=TRUE, warning=FALSE}
+## Finding and removing columns with mostly NA values:
+naCol <- sapply(train, function(x) any(is.na(x)|x == " "))
+train <- train[, naCol == FALSE]
+test <- test[, naCol == FALSE]
+```
+
+Now, removing any column with near zero variances, and columns which are not relevant to this analysis:
+```{r, echo = TRUE, cache=TRUE, warning = FALSE}
+## Finding and removing columns with NZV values:
+zeroVar <- nearZeroVar(train, saveMetrics = TRUE)
+train <- train[, zeroVar$nzv == FALSE]
+zeroVar1 <- nearZeroVar(test, saveMetrics = TRUE)
+test <- test[, zeroVar1$nzv == FALSE]
+## Removing the first six columns from the resultanat dataset since they are not relevant for preiction:
+train <- train[, 7:length(colnames(train))]
+test <- test[, 7:length(colnames(test))]
+```
+
+Now that the data is ready for processing, the training dataset will be divided into Training and Test sets (70:30). Then, the **Random Forest Model (RF)** will be used to analyze and predict the activities:
+```{r, echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+## Dividing the training dataset:
+set.seed(1323)
+inTrain <- createDataPartition(y = train$classe, p = 0.70, list = FALSE)
+Training <- train[inTrain, ]
+Testing <- train[-inTrain, ]
+## Building the RF model:
+set.seed(13232)
+rfModel <- randomForest(classe~., data = Training)
+## Predicting the Tesing data with RF model,
+predicted <- predict(rfModel, Testing, type = "class")
+## Checking the accuracy of predictions using Confusion Matrix
+confusionMatrix(predicted, Testing$classe)
+## Below is a plot of the Random Forest Model
+plot(rfModel)
+```
+
+The above model predicted the Training data with a very high accuracy of ***99.56%***. However, to test if accuracy can be further improved, the **Decision Tree model** can be used:
+```{r, echo=TRUE, cache=TRUE, warning=FALSE, message=FALSE}
+## Building the tree model
+set.seed(13232)
+treeModel <- rpart(classe~., data = Training, method = "class")
+## Predicting with the model
+predicted1 <- predict(treeModel, Testing, type = "class")
+## Checking the accuracy of predictions using Confusion Matrix
+confusionMatrix(predicted1, Testing$classe)
+```
+
+The accuracy level of the Decision Tree model above is only ***74.17%*** which is much lower than the Random Forest Model. It is obvious that the Random Forest Model gives superior predictions compared to the Decision Tree model. 
