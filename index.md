@@ -4,4 +4,4 @@
 ###output: html_document###
 
 
-This Project has the aim 
+This Project has the aim of understanding and predicting the 
