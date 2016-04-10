@@ -1,10 +1,13 @@
 #Practical Machine Learning Course Project#
 ###By: Aditya###
-####Date: 10 April 2016####
+####Submission Date: 10 April 2016####
 
 
 
 This Project has the aim of understanding and predicting the manner in which ***six*** participants did their exercise using ***dumbells***. The data was collected using devices such as ***Jawbone Up, Nike FuelBand, and Fitbit***. The **Human Activity Recognition** has become an important area of research in recent times and and focusses on how well a given activity was performed by the user.
+
+***Assumptions:*** During this project, two Models, the **Random Forest Model** an the **Decision Tree Model** were used. It was found that the Random Forest model had higher accuracy and therefore, the model was used to finally predict the manner in which the participants did their exercise. 
+No **Cross Validation** was done for reasons explained in later sections. The accuracy level of the Random Forest Model was found to be **99.56%**. The **Out-of-Box (OOB)** estmate of error for the Random Forest Model was found to be **0.49%**
 
 
 
@@ -39,12 +42,20 @@ zeroVar <- nearZeroVar(train, saveMetrics = TRUE)
 train <- train[, zeroVar$nzv == FALSE]
 zeroVar1 <- nearZeroVar(test, saveMetrics = TRUE)
 test <- test[, zeroVar1$nzv == FALSE]
-## Removing the first six columns from the resultanat dataset since they are not relevant for preiction:
+## Removing the first six columns from the resultanat dataset since they are not relevant for prediction:
 train <- train[, 7:length(colnames(train))]
 test <- test[, 7:length(colnames(test))]
 ```
 
-Now that the data is ready for processing, the training dataset will be divided into Training and Test sets (70:30). Then, the **Random Forest Model (RF)** will be used to analyze and predict the activities:
+Now that the data is ready for processing, the training dataset will be divided into Training and Test sets (70:30). Then, the **Random Forest Model (RF)** will be used to analyze and predict the activities.
+It may be noted here that **Cross Validation** is **unnecessary** in Random Forest forest algorithm, as explained by Professors **Leo Breiman and Adele Cutler**:
+***"In random forests, there is no need for cross-validation or a separate test set to get an unbiased estimate of the test set error. It is estimated internally, during the run, as follows:
+Each tree is constructed using a different bootstrap sample from the original data. About one-third of the cases are left out of the bootstrap sample and not used in the construction of the kth tree."***
+For more information, please check out this link: 
+[Weblink] [D_link]
+
+[D_link]: http://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#ooberr
+
 
 ```r
 ## Dividing the training dataset:
@@ -102,7 +113,8 @@ plot(rfModel)
 
 ![](index_files/figure-html/unnamed-chunk-5-1.png)
 
-The above model predicted the Training data with a very high accuracy of ***99.56%***. However, to test if accuracy can be further improved, the **Decision Tree model** can be used:
+The above model predicted the Training data with a very high accuracy of ***99.56%***. The OOB estimate of error of the RF model is **0.49%**. However, to test if accuracy can be further improved, the **Decision Tree model** can be used.
+
 
 ```r
 ## Building the tree model
@@ -148,4 +160,19 @@ confusionMatrix(predicted1, Testing$classe)
 ## Balanced Accuracy      0.9111   0.7740   0.8523  0.76532   0.8373
 ```
 
-The accuracy level of the Decision Tree model above is only ***74.17%*** which is much lower than the Random Forest Model. It is obvious that the Random Forest Model gives superior predictions compared to the Decision Tree model. 
+The accuracy level of the Decision Tree model above is only ***74.17%*** which is much lower than the Random Forest Model. It is obvious that the Random Forest Model gives superior predictions compared to the Decision Tree model.
+Therefore the Random Forest Model will be applied for predicting the 20 values of the Test data set.
+
+
+```r
+## Using RF model for predicting the actual Testing Values
+acpredict <- predict(rfModel, test, type = "class")
+print(acpredict) ## Output
+```
+
+```
+##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E
+```
+
